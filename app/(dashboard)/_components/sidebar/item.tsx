@@ -39,4 +39,4 @@ const Item = ({ id, name, imageUrl }: ItemProps) => {
   );
 };
 
-export default Item;
+export default Item;  
