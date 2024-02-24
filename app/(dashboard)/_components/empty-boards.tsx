@@ -6,9 +6,11 @@ import useApiMutation from "@/hooks/use-api-mutation";
 import { useOrganization } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 const EmptyBoards = () => {
+  const router = useRouter();
   const { mutate, pending } = useApiMutation(api.board.createBoard);
   const { organization } = useOrganization();
   const onClick = () => {
@@ -19,8 +21,8 @@ const EmptyBoards = () => {
     })
       .then((id) => {
         toast.success("Canvas created successfully");
-        // redirect to the created board --my idea use link from nextjs
-
+        router.push(`/canvas/${id}`);
+        // redirect to the created board --my idea use link from nextjs -- update :  used reouter 
       })
       .catch(() => {
         toast.error("Failed to create canvas");
