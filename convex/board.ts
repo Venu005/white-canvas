@@ -74,7 +74,87 @@ export const updateBoard = mutation({
     }
 
     // after deleting delete the favorite relation as well
+    const userId = identity.subject;
+    const existingFavorite = await ctx.db
+      .query("userFavorites")
+      .withIndex("by_user_board", (q) =>
+        q.eq("userId", userId).eq("boardId", args.id)
+      )
+      .unique();
+    if (existingFavorite) {
+      await ctx.db.delete(existingFavorite._id);
+    }
     const board = await ctx.db.patch(args.id, { title: args.title });
+
+    return board;
+  },
+});
+export const favoriteBoard = mutation({
+  args: {
+    id: v.id("boards"),
+    orgId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthorised");
+    }
+    const board = await ctx.db.get(args.id);
+    if (!board) {
+      throw new Error("Canvas not found");
+    }
+
+    const userId = identity.subject;
+    // cchecking if the canavs I want to fav is already in the favorite list or not
+    // getting userFavorites directly from the schema
+    const existingFavorite = await ctx.db
+      .query("userFavorites")
+      .withIndex("by_user_board_org", (q) =>
+        q.eq("userId", userId).eq("boardId", board._id).eq("orgId", args.orgId)
+      )
+      .unique();
+    if (existingFavorite) {
+      throw new Error("Already in favorites");
+    }
+    await ctx.db.insert("userFavorites", {
+      userId,
+      boardId: board._id,
+      orgId: args.orgId,
+    });
+
+    return board;
+  },
+});
+
+export const unfavoriteBoard = mutation({
+  args: {
+    id: v.id("boards"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthorised");
+    }
+    const board = await ctx.db.get(args.id);
+    if (!board) {
+      throw new Error("Canvas not found");
+    }
+
+    const userId = identity.subject;
+    // cchecking if the canavs I want to fav is already in the favorite list or not
+    // getting userFavorites directly from the schema
+    const existingFavorite = await ctx.db
+      .query("userFavorites")
+      // if  a canvas is favorited that means an org is already created, I can't create a canvas without having an organization
+      .withIndex("by_user_board", (q) =>
+        q.eq("userId", userId).eq("boardId", board._id)
+      )
+      .unique();
+    // can't unfavorite if it's not in the favorite list
+    if (!existingFavorite) {
+      throw new Error("Favorited canvas not found");
+    }
+    await ctx.db.delete(existingFavorite._id);
 
     return board;
   },
