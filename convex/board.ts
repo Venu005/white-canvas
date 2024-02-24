@@ -52,6 +52,16 @@ export const deleteBoard = mutation({
       throw new Error("Unauthorised");
     }
     // after deleting delete the favorite relation as well
+    const userId = identity.subject;
+    const existingFav = await ctx.db
+      .query("userFavorites")
+      .withIndex("by_user_board", (q) =>
+        q.eq("userId", userId).eq("boardId", args.id)
+      )
+      .unique();
+    if (existingFav) {
+      await ctx.db.delete(existingFav._id);
+    }
     await ctx.db.delete(args.id);
   },
 });
