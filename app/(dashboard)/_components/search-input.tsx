@@ -10,7 +10,7 @@ import qs from "query-string";
 
 const SearchInput = () => {
   const router = useRouter();
-  const [value, setValue] = useState(" ");
+  const [value, setValue] = useState("");
   const debouncedValue = useDebounce(value, 500);
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setValue(e.target.value);
@@ -25,7 +25,7 @@ const SearchInput = () => {
       },
       { skipEmptyString: true, skipNull: true }
     );
-    router.push(url)
+    router.push(url);
   }, [debouncedValue, router]);
   return (
     <div className="w-full relative">
