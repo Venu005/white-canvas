@@ -1,3 +1,4 @@
+//  add erase method
 import { Skeleton } from "@/components/ui/skeleton";
 import { ToolButton } from "./tool-button";
 import { CanvasMode, CanvasState, LayerType } from "@/types/canvas";

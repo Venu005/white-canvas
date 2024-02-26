@@ -1,13 +1,9 @@
-/**
- * An enum is a special "class" that represents a group of constants (unchangeable variables).
-
-Enums come in two flavors string and numeric.
- */
 export type Color = {
   r: number;
   g: number;
   b: number;
 };
+
 export type Camera = {
   x: number;
   y: number;
@@ -20,6 +16,7 @@ export enum LayerType {
   Text,
   Note,
 }
+
 export type RectangleLayer = {
   type: LayerType.Rectangle;
   x: number;
@@ -29,6 +26,7 @@ export type RectangleLayer = {
   fill: Color;
   value?: string;
 };
+
 export type EllipseLayer = {
   type: LayerType.Ellipse;
   x: number;
@@ -38,9 +36,11 @@ export type EllipseLayer = {
   fill: Color;
   value?: string;
 };
+
 export type PathLayer = {
   type: LayerType.Path;
-  path: string;
+  x: number;
+  y: number;
   height: number;
   width: number;
   fill: Color;
@@ -57,6 +57,7 @@ export type TextLayer = {
   fill: Color;
   value?: string;
 };
+
 export type NoteLayer = {
   type: LayerType.Note;
   x: number;
@@ -66,11 +67,12 @@ export type NoteLayer = {
   fill: Color;
   value?: string;
 };
+
 export type Point = {
   x: number;
   y: number;
 };
-// this will help us  in translating the  coordinates of the layer, height,width
+
 export type XYWH = {
   x: number;
   y: number;
@@ -90,17 +92,13 @@ export type CanvasState =
       mode: CanvasMode.None;
     }
   | {
-      mode: CanvasMode.Pressing;
-      origin: Point;
-    }
-  | {
       mode: CanvasMode.SelectionNet;
       origin: Point;
       current?: Point;
     }
   | {
       mode: CanvasMode.Translating;
-      origin: Point;
+      current: Point;
     }
   | {
       mode: CanvasMode.Inserting;
@@ -111,12 +109,16 @@ export type CanvasState =
         | LayerType.Note;
     }
   | {
-      mode: CanvasMode.Resizing;
-      initalBounds: XYWH;
-      corner: Side;
+      mode: CanvasMode.Pencil;
     }
   | {
-      mode: CanvasMode.Pencil;
+      mode: CanvasMode.Pressing;
+      origin: Point;
+    }
+  | {
+      mode: CanvasMode.Resizing;
+      initialBounds: XYWH;
+      corner: Side;
     };
 
 export enum CanvasMode {
@@ -128,3 +130,10 @@ export enum CanvasMode {
   Resizing,
   Pencil,
 }
+
+export type Layer =
+  | RectangleLayer
+  | EllipseLayer
+  | PathLayer
+  | TextLayer
+  | NoteLayer;
