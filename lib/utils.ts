@@ -86,3 +86,4 @@ export function resizeBounds(bounds: XYWH, corner: Side, point: Point): XYWH {
   }
   return result;
 }
+

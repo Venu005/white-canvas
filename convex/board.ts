@@ -34,7 +34,7 @@ export const createBoard = mutation({
       title: args.title,
       orgId: args.orgId,
       authorId: identity.subject,
-      authorName: identity.name!,
+      authorName: identity.name || "You",
       imageUrl: randomImage,
     });
 
