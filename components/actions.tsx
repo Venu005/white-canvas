@@ -28,7 +28,7 @@ const Actions = ({ children, side, sideOffset, id, title }: ActionProps) => {
   const { onOpen } = useRenameModal();
   const oncopyLink = () => {
     navigator.clipboard
-      .writeText(`${window.location.origin}/board/${id}`)
+      .writeText(`${window.location.origin}/canvas/${id}`)
       .then(() => {
         toast.success("Link copied to clipboard");
       })
