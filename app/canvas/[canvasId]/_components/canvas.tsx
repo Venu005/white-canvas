@@ -1,9 +1,9 @@
 "use client";
-
+// if a child elem parent is a use client then the child elem is also a use client
 import { Info } from "./info";
 import { Participants } from "./participants";
 import { Toolbar } from "./toolbar";
-import { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   Camera,
   CanvasMode,
@@ -11,6 +11,8 @@ import {
   Color,
   LayerType,
   Point,
+  Side,
+  XYWH,
 } from "@/types/canvas";
 
 import {
@@ -19,14 +21,20 @@ import {
   useCanUndo,
   useMutation,
   useStorage,
+  useOthersMapped,
 } from "@/liveblocks.config";
 import { CursorsPresence } from "./cursors-presence";
 
-import { pointerEventToCanvasPoint } from "@/lib/utils"; // calc the psotion wrt to camera
+import {
+  connectionIdToColor,
+  pointerEventToCanvasPoint,
+  resizeBounds,
+} from "@/lib/utils"; // calc the psotion wrt to camera
 
 import { nanoid } from "nanoid"; /**A tiny, secure, URL-friendly, unique string ID generator for JavaScript. */
 import { LiveObject } from "@liveblocks/client";
 import { LayerPreview } from "./layer-preview";
+import { SelectionBox } from "./selection-box";
 const MAX_LAYERS = 1000;
 interface CanvasProps {
   canvasId: string;
@@ -80,6 +88,25 @@ const Canvas = ({ canvasId }: CanvasProps) => {
     },
     [lastUsedColor]
   );
+  // only selected layer is resizable
+  const resizeLayer = useMutation(
+    ({ storage, self }, point: Point) => {
+      if (canvasState.mode !== CanvasMode.Resizing) {
+        return;
+      }
+      const bounds = resizeBounds(
+        canvasState.initialBounds,
+        canvasState.corner,
+        point
+      );
+      const liveLayers = storage.get("layers");
+      const layer = liveLayers.get(self.presence.selection[0]);
+      if (layer) {
+        layer.update(bounds);
+      }
+    },
+    [canvasState]
+  );
   // to change the camera ovements
   const onWheel = useCallback((e: React.WheelEvent) => {
     setCamera((camera) => ({
@@ -87,13 +114,17 @@ const Canvas = ({ canvasId }: CanvasProps) => {
       y: camera.y - e.deltaY,
     }));
   }, []);
+  // mouse movements tracking functions
   const onPointerMove = useMutation(
     ({ setMyPresence }, e: React.PointerEvent) => {
       e.preventDefault();
       const current = pointerEventToCanvasPoint(e, camera); // calc it based on state of the canvas and state of the camera
+      if (canvasState.mode === CanvasMode.Resizing) {
+        resizeLayer(current);
+      }
       setMyPresence({ cursor: current });
     },
-    []
+    [canvasState, resizeLayer, camera]
   );
   const onPointerLeave = useMutation(({ setMyPresence }) => {
     setMyPresence({ cursor: null });
@@ -113,6 +144,49 @@ const Canvas = ({ canvasId }: CanvasProps) => {
       history.resume();
     },
     [canvasState, camera, history, insertlayer]
+  );
+  const selections = useOthersMapped((other) => other.presence.selection);
+  const layerIdsToColorSelection = useMemo(() => {
+    const layerIdsToColorSelection: Record<string, string> = {};
+    for (const user of selections) {
+      const [connectionId, selection] = user;
+      for (const layerId of selection) {
+        layerIdsToColorSelection[layerId] = connectionIdToColor(connectionId);
+      }
+    }
+    return layerIdsToColorSelection;
+  }, [selections]);
+
+  // selecting the shapes I can't see my shapes but if som other person selects that shape I get an outline
+  const onLayerPointerDown = useMutation(
+    ({ self, setMyPresence }, e: React.PointerEvent, layerId: string) => {
+      if (
+        canvasState.mode === CanvasMode.Pencil ||
+        canvasState.mode === CanvasMode.Inserting
+      ) {
+        return;
+      }
+      history.pause();
+      e.stopPropagation();
+      const point = pointerEventToCanvasPoint(e, camera);
+      if (!self.presence.selection.includes(layerId)) {
+        setMyPresence({ selection: [layerId] }, { addToHistory: true });
+      }
+      setCanvasState({ mode: CanvasMode.Translating, current: point });
+    },
+    [setCanvasState, camera, history, canvasState.mode]
+  );
+  // shape resizing using useCallBack because this function fires only when the layer is selected before
+  const onResizeHandlePointerDown = useCallback(
+    (corner: Side, initialBounds: XYWH) => {
+      history.pause();
+      setCanvasState({
+        mode: CanvasMode.Resizing,
+        initialBounds,
+        corner,
+      });
+    },
+    [history]
   );
   return (
     <main className="h-full w-full relative bg-neutral-100 touch-none ">
@@ -138,10 +212,12 @@ const Canvas = ({ canvasId }: CanvasProps) => {
             <LayerPreview
               key={layerId}
               id={layerId}
-              onLayerPointerDown={() => {}}
-              selectionColor="#000"
+              onLayerPointerDown={onLayerPointerDown}
+              selectionColor={layerIdsToColorSelection[layerId]}
             />
           ))}
+          {/* enables self to select a layer */}
+          <SelectionBox onResizeHandlePointerDown={onResizeHandlePointerDown} />
           <CursorsPresence />
         </g>
       </svg>

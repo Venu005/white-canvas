@@ -1,3 +1,4 @@
+import { colorToCss } from "@/lib/utils";
 import { EllipseLayer } from "@/types/canvas";
 import React from "react";
 
@@ -25,8 +26,8 @@ export const Ellipse = ({
       width={width}
       height={height}
       strokeWidth={1}
-      fill="#000" // manually added will change later
-      stroke="transparent"
+      fill={fill ? colorToCss(fill) : "#000"} // manually added will change later
+      stroke={selectionColor || "transparent"}
       cx={layer.width / 2}
       cy={layer.height / 2}
       rx={layer.width / 2}
