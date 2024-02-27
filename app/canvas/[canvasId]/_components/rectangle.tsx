@@ -28,6 +28,6 @@ export const Rectangle = ({
       strokeWidth={1}
       fill={fill ? colorToCss(fill) : "#000"} // manually added will change later
       stroke={selectionColor || "transparent"}
-    />
+    /> 
   );
 };

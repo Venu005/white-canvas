@@ -73,7 +73,7 @@ export const LayerPreview = memo(
             stroke={selectionColor}
           />
         );
-
+     
       default:
         console.warn("Unknown Layer");
         return null;

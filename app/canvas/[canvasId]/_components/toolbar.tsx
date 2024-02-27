@@ -100,6 +100,7 @@ export const Toolbar = ({
             canvasState.layerType === LayerType.Ellipse
           }
         />
+
         <ToolButton
           label="Pen"
           icon={Pencil}
@@ -132,3 +133,4 @@ export const ToolbarSkeleton = () => {
     </div>
   );
 };
+
