@@ -7,6 +7,7 @@ import { ModalProvider } from "@/providers/modal-provider";
 import { Suspense } from "react";
 import { Loading } from "@/components/auth/loading";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/react";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -30,6 +31,7 @@ export default function RootLayout({
             <ModalProvider />
             {children}
             <SpeedInsights />
+            <Analytics />
           </ConvexClientProvider>
         </Suspense>
       </body>
